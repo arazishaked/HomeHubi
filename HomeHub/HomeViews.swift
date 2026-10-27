@@ -306,8 +306,8 @@ struct WatchView: View {
         let rid = store.selectedRoomID
         let sources = store.watchSources(rid)
         let tv = store.videoEndpoint(rid)
-        List {
-            Section {
+        GList {
+            GSection {
                 ForEach(sources) { d in
                     Button {
                         busyID = d.ip
@@ -331,7 +331,7 @@ struct WatchView: View {
             if let tv = tv {
                 let all = store.apps(for: tv.ip)
                 let shown = search.isEmpty ? all : all.filter { $0.name.localizedCaseInsensitiveContains(search) }
-                Section {
+                GSection {
                     if all.isEmpty && store.loadingApps.contains(tv.ip) {
                         HStack { ProgressView(); Text("קורא את האפליקציות מהטלוויזיה…").foregroundStyle(.secondary) }
                     }
@@ -458,8 +458,8 @@ struct ListenView: View {
     var body: some View {
         let rid = store.selectedRoomID
         let sources = store.listenSources(rid)
-        List {
-            Section("מקורות") {
+        GList {
+            GSection("מקורות") {
                 ForEach(sources) { c in
                     Button {
                         busyID = c.id
@@ -476,7 +476,7 @@ struct ListenView: View {
                 }
             }
             if let a = store.audioEndpoint(rid) {
-                Section("עוצמה · \(a.name)") {
+                GSection("עוצמה · \(a.name)") {
                     HStack {
                         Button { Task { await store.roomVolume(rid, .volDown) } } label: {
                             Image(systemName: "speaker.minus").frame(maxWidth: .infinity, minHeight: 32)
@@ -503,8 +503,8 @@ struct LightsView: View {
 
     var body: some View {
         let devs = store.roomDevices(store.selectedRoomID).filter { $0.kind == .light || $0.kind == .plug }
-        List {
-            ForEach(devs) { d in LightRow(d: d) }
+        GList {
+            GSection { ForEach(devs) { d in LightRow(d: d) } }
         }
         .navigationTitle("תאורה")
     }
@@ -553,7 +553,8 @@ struct ShadesView: View {
 
     var body: some View {
         let devs = store.roomDevices(store.selectedRoomID).filter { $0.kind == .curtain || $0.kind == .blind }
-        List {
+        GList {
+            GSection {
             ForEach(devs) { d in
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 12) {
@@ -570,6 +571,7 @@ struct ShadesView: View {
                 }
                 .padding(.vertical, 4)
             }
+            }
         }
         .navigationTitle("וילונות ותריסים")
     }
@@ -581,9 +583,11 @@ struct RoomDevicesView: View {
     @EnvironmentObject var store: Store
 
     var body: some View {
-        List {
-            ForEach(store.roomDevices(store.selectedRoomID)) { d in
-                NavigationLink(value: Route.device(d.ip)) { DeviceRow(d: d) }
+        GList {
+            GSection {
+                ForEach(store.roomDevices(store.selectedRoomID)) { d in
+                    GLink(value: Route.device(d.ip)) { DeviceRow(d: d) }
+                }
             }
         }
         .navigationTitle(store.roomName(store.selectedRoomID))

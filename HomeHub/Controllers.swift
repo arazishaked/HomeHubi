@@ -843,7 +843,20 @@ final class TuyaController: Controller {
         _ = try await exchange(cmd: 0x07, json: j, versionHeader: true)
     }
 
+    /// מכשיר שנשלט דרך חשבון Tuya (לא נמצא ברשת, Zigbee, או ערוץ במפסק מרובה ערוצים)
+    private var cloud: Bool { dev.config["cloud"] == "1" }
+    private var code: String { dev.config["code"] ?? "switch_1" }
+
+    private func cloudStatus() async -> Status {
+        guard let m = await TuyaSession.shared.status(devId) else { return Status(power: nil, reachable: false) }
+        var st = Status(power: m[code] as? Bool, reachable: true)
+        if isCover, let p = (m["percent_control"] ?? m["percent_state"]) as? Int { st.level = p }
+        if let b = (m["bright_value_v2"] ?? m["bright_value"]) as? Int { st.level = max(1, min(100, b / 10)) }
+        return st
+    }
+
     override func status() async -> Status {
+        if cloud { return await cloudStatus() }
         if key.isEmpty { return Status(power: nil, reachable: await isOpen(dev.ip, 6668, 1.5)) }
         guard let d = try? await readDPS() else { return Status(power: nil, reachable: false) }
         var st = Status(power: nil, reachable: true)
@@ -862,17 +875,25 @@ final class TuyaController: Controller {
     }
 
     override func power(_ on: Bool) async throws {
-        if isCover { try await cover(on ? .open : .close) } else { try await setDPS([dps: on]) }
+        if isCover { try await cover(on ? .open : .close); return }
+        if cloud { try await TuyaSession.shared.send(devId, code, on); return }
+        try await setDPS([dps: on])
     }
 
     override func cover(_ c: CoverCommand) async throws {
         var v = "stop"
         if c == .open { v = "open" } else if c == .close { v = "close" }
+        if cloud { try await TuyaSession.shared.send(devId, "control", v); return }
         try await setDPS(["1": v])
     }
 
     override func setLevel(_ pct: Int) async throws {
         let p = max(0, min(100, pct))
+        if cloud {
+            if isCover { try await TuyaSession.shared.send(devId, "percent_control", p) }
+            else { try await TuyaSession.shared.send(devId, "bright_value_v2", max(10, p * 10)) }
+            return
+        }
         if isCover { try await setDPS(["2": p]) }              // בחלק מהמנועים 100 = סגור
         else { try await setDPS(["22": 10 + p * 990 / 100]) }  // בהירות 10..1000
     }

@@ -47,20 +47,19 @@ struct DeviceControlView: View {
     @ViewBuilder
     func content(_ d: Device) -> some View {
         let st = store.statuses[ip]
-        Form {
-            Section {
+        GList {
+            GSection {
                 VStack(spacing: 8) {
                     DeviceIcon(kind: d.kind, on: st?.power == true, size: 64).foregroundStyle(Color.accentColor)
                     Text(stateText(st, d.kind)).font(.subheadline).foregroundStyle(.secondary)
                     if let i = st?.input { Text("קלט: \(i)").font(.caption).foregroundStyle(.secondary) }
                 }
                 .frame(maxWidth: .infinity)
-                .listRowBackground(Color.clear)
             }
             controls(d)
             if d.kind == .tv || d.kind == .streamer {
                 let list = store.apps(for: ip)
-                Section {
+                GSection {
                     if !list.isEmpty {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 80), spacing: 12)], spacing: 14) {
                             ForEach(list) { a in
@@ -92,7 +91,7 @@ struct DeviceControlView: View {
                 }
             }
             if busy || !msg.isEmpty {
-                Section {
+                GSection {
                     if busy { ProgressView() }
                     if !msg.isEmpty { Text(msg).foregroundStyle(.red).font(.footnote) }
                 }
@@ -115,7 +114,7 @@ struct DeviceControlView: View {
     func controls(_ d: Device) -> some View {
         switch d.kind {
         case .curtain, .blind:
-            Section("שליטה") {
+            GSection("שליטה") {
                 CoverButtons(kind: d.kind) { c in
                     act(c == .open ? "פתיחה" : (c == .close ? "סגירה" : "עצירה")) { try await $0.cover(c) }
                 }
@@ -127,7 +126,7 @@ struct DeviceControlView: View {
                 }
             }
         case .light:
-            Section("שליטה") {
+            GSection("שליטה") {
                 powerButtons
                 VStack(alignment: .leading) {
                     Text("בהירות: \(Int(level))%").font(.footnote).foregroundStyle(.secondary)
@@ -137,12 +136,12 @@ struct DeviceControlView: View {
                 }
             }
         case .camera:
-            Section {
+            GSection {
                 Text("צפייה בשידור חי של מצלמות עדיין לא נתמכת. האפליקציה מציגה אם המצלמה זמינה ברשת.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
         default:
-            Section("שליטה") {
+            GSection("שליטה") {
                 powerButtons
                 if d.kind == .tv || d.kind == .receiver {
                     HStack {
@@ -218,23 +217,23 @@ struct DeviceSettingsView: View {
 
     @ViewBuilder
     func form(_ d: Device) -> some View {
-        Form {
-            Section("פרטים") {
+        GList {
+            GSection("פרטים") {
                 TextField("שם", text: Binding(get: { store.device(ip)?.name ?? "" }, set: { store.rename(ip, $0) }))
-                Picker("סוג", selection: Binding(get: { store.device(ip)?.kind ?? d.kind }, set: { store.setKind(ip, $0) })) {
+                GPicker("סוג", selection: Binding(get: { store.device(ip)?.kind ?? d.kind }, set: { store.setKind(ip, $0) })) {
                     ForEach(Kind.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
-                Picker("חדר", selection: Binding<UUID?>(get: { store.device(ip)?.roomID }, set: { store.setRoom(ip, $0) })) {
+                GPicker("חדר", selection: Binding<UUID?>(get: { store.device(ip)?.roomID }, set: { store.setRoom(ip, $0) })) {
                     Text("ללא חדר").tag(UUID?.none)
                     ForEach(store.rooms) { r in Text(r.name).tag(Optional(r.id)) }
                 }
             }
-            Section {
-                LabeledContent("יצרן", value: d.config["maker"] ?? d.brand.title)
-                if !d.model.isEmpty { LabeledContent("דגם", value: d.model) }
-                if let os = d.config["os"] { LabeledContent("מערכת", value: os) }
+            GSection {
+                GLabeled("יצרן", value: d.config["maker"] ?? d.brand.title)
+                if !d.model.isEmpty { GLabeled("דגם", value: d.model) }
+                if let os = d.config["os"] { GLabeled("מערכת", value: os) }
                 if d.kind == .tv || d.kind == .streamer {
-                    LabeledContent("אפליקציות", value: appsSummary(d))
+                    GLabeled("אפליקציות", value: appsSummary(d))
                     Button {
                         Task { await store.learn(d) }
                     } label: {
@@ -245,21 +244,21 @@ struct DeviceSettingsView: View {
                     }
                     .disabled(store.loadingApps.contains(d.ip))
                 }
-                LabeledContent("כתובת IP", value: d.ip)
-                if !d.ports.isEmpty { LabeledContent("פורטים", value: d.ports.map(String.init).joined(separator: ", ")) }
+                GLabeled("כתובת IP", value: d.ip)
+                if !d.ports.isEmpty { GLabeled("פורטים", value: d.ports.map(String.init).joined(separator: ", ")) }
             } header: {
                 Text("זיהוי")
             } footer: {
                 Text("האפליקציה מזהה את המכשיר ולומדת לבד אילו אפליקציות מותקנות בו: כשמוסיפים אותו, וכל כמה שעות כשהוא דלוק.")
             }
-            Section {
+            GSection {
                 TextField("כתובת MAC", text: Binding(get: { store.device(ip)?.mac ?? "" }, set: { store.setMac(ip, $0) }))
                     .autocorrectionDisabled().textInputAutocapitalization(.never)
                 if d.brand == .sony {
                     TextField("Pre-Shared Key", text: cfg("psk")).autocorrectionDisabled().textInputAutocapitalization(.never)
                 }
                 if d.brand == .tuya && !store.tuyaCloud.isEmpty {
-                    Picker("מכשיר בחשבון Tuya", selection: Binding<String>(get: { store.device(ip)?.config["id"] ?? "" },
+                    GPicker("מכשיר בחשבון Tuya", selection: Binding<String>(get: { store.device(ip)?.config["id"] ?? "" },
                                                                         set: { store.assignTuya(ip: ip, cloudID: $0) })) {
                         Text("לא נבחר").tag("")
                         ForEach(store.tuyaCloud) { Text($0.name).tag($0.id) }
@@ -278,8 +277,8 @@ struct DeviceSettingsView: View {
                 Text("כתובת MAC מאפשרת להדליק טלוויזיה שכבויה לגמרי. בטלוויזיות Samsung ו-LG הזיווג נעשה באישור על המסך בפעם הראשונה.")
             }
             if !ports(for: d).isEmpty {
-                Section("קישורים") {
-                    NavigationLink(value: Route.deviceConnections(ip)) {
+                GSection("קישורים") {
+                    GLink(value: Route.deviceConnections(ip)) {
                         HStack {
                             Label("מחברים", systemImage: "cable.connector.horizontal")
                             Spacer()
@@ -288,10 +287,10 @@ struct DeviceSettingsView: View {
                     }
                 }
             }
-            Section {
-                NavigationLink(value: Route.device(ip)) { Label("בדיקת שליטה", systemImage: "slider.horizontal.3") }
+            GSection {
+                GLink(value: Route.device(ip)) { Label("בדיקת שליטה", systemImage: "slider.horizontal.3") }
             }
-            Section {
+            GSection {
                 Button("הסר מהאפליקציה", role: .destructive) { confirmRemove = true }
             }
         }

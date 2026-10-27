@@ -13,63 +13,48 @@ enum Discovery {
                                   7000, 8001, 8002, 8008, 8009, 8060, 8080, 8081, 8443, 9197, 49152, 60006,
                                   60128, 62078]
 
-    static func scan(progress: @escaping (Double) -> Void) async -> [Device] {
-        // Bonjour רץ במקביל לסריקת הכתובות
+    /// סורק את הרשת. כל מכשיר שזוהה נשלח מיד ל-onFound, כך שהרשימה מתמלאת תוך כדי סריקה
+    static func scan(progress: @escaping (Double) -> Void, onFound: @escaping (Device) -> Void) async -> [Device] {
+        // Bonjour רץ במקביל, ובסוף משלים שמות וסוגים
         let bonjourTask = Task { @MainActor in await BonjourScanner().run(seconds: 8) }
+        let me = localIPv4().map { ipString($0.ip) }
+        let hosts = subnetHosts().filter { $0 != me }
+        var found: [String: Device] = [:]
 
-        let hosts = subnetHosts()
-
-        // שלב 1: מי חי ברשת (בדיקה מהירה של כמה פורטים נפוצים; גם דחייה מעידה שיש שם מכשיר)
-        var candidates: Set<String> = []
         var idx = 0
-        let chunk = 20
+        let chunk = 12
         while idx < hosts.count {
             let part = Array(hosts[idx..<min(idx + chunk, hosts.count)])
             idx += chunk
-            await withTaskGroup(of: (String, Bool).self) { g in
-                for h in part { g.addTask { (h, await Discovery.quickAlive(h)) } }
-                for await (ip, ok) in g where ok { candidates.insert(ip) }
-            }
-            progress(Double(idx) / Double(max(hosts.count, 1)) * 0.5)
-        }
-
-        // שלב 2: כל הפורטים, רק למכשירים שנמצאו (ול-Bonjour)
-        let bonjourEarly = await bonjourTask.value
-        for ip in bonjourEarly.keys { candidates.insert(ip) }
-        var alive: [String: [Int]] = [:]
-        let list = Array(candidates)
-        var k = 0
-        while k < list.count {
-            let part = Array(list[k..<min(k + 5, list.count)])
-            k += 5
-            await withTaskGroup(of: (String, [Int], Bool).self) { g in
-                for h in part { g.addTask { await Discovery.sweep(h) } }
-                for await (ip, open, _) in g { alive[ip] = open }
-            }
-            progress(0.5 + 0.35 * Double(min(k, list.count)) / Double(max(list.count, 1)))
-        }
-
-        let bonjour = bonjourEarly
-        if let me = localIPv4() { alive[ipString(me.ip)] = nil }
-
-        // זיהוי כל מכשיר חי
-        var found: [Device] = []
-        let ips = Array(alive.keys)
-        var j = 0
-        while j < ips.count {
-            let part = Array(ips[j..<min(j + 8, ips.count)])
-            j += 8
-            await withTaskGroup(of: Device.self) { g in
-                for ip in part {
-                    let open = alive[ip] ?? []
-                    let info = bonjour[ip]
-                    g.addTask { await Discovery.identify(ip, open: open, bonjour: info) }
+            await withTaskGroup(of: Device?.self) { g in
+                for h in part {
+                    g.addTask {
+                        guard await Discovery.quickAlive(h) else { return nil }
+                        let (_, open, _) = await Discovery.sweep(h)
+                        return await Discovery.identify(h, open: open, bonjour: nil)
+                    }
                 }
-                for await d in g { found.append(d) }
+                for await d in g {
+                    if let d = d { found[d.ip] = d; onFound(d) }
+                }
             }
-            progress(0.85 + 0.15 * Double(min(j, ips.count)) / Double(max(ips.count, 1)))
+            progress(Double(min(idx, hosts.count)) / Double(max(hosts.count, 1)) * 0.9)
         }
-        return found
+
+        // השלמה מ-Bonjour: שמות לכל מה שלא זוהה, ומכשירים שלא ענו בסריקה
+        let bonjour = await bonjourTask.value
+        for (ip, info) in bonjour where ip != me {
+            let old = found[ip]
+            let generic = old == nil || old!.brand == .unknown || old!.name.hasPrefix("מכשיר ") || old!.name.hasSuffix(" \(ip)")
+            guard generic else { continue }
+            var open = old?.ports ?? []
+            if old == nil { open = await Discovery.sweep(ip).1 }
+            let d = await Discovery.identify(ip, open: open, bonjour: info)
+            found[ip] = d
+            onFound(d)
+        }
+        progress(1)
+        return Array(found.values)
     }
 
     static let quickPorts: [UInt16] = [80, 443, 62078, 6668, 8008, 554, 3000]

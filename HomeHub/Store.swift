@@ -108,7 +108,7 @@ final class Store: ObservableObject {
     }
 
     func addAllDiscovered() {
-        for d in discovered where !isAdded(d.ip) { add(d, room: selectedRoomID) }
+        for d in discovered where !isAdded(d.ip) && (isRecognized(d) || d.ip.hasPrefix("tuya:")) { add(d, room: selectedRoomID) }
     }
 
     func remove(_ ip: String) {
@@ -127,21 +127,46 @@ final class Store: ObservableObject {
         scanning = true
         progress = 0
         addLog("סריקת רשת התחילה")
-        let found = await Discovery.scan { p in
+        discovered.removeAll { !$0.ip.hasPrefix("tuya:") }   // מכשירים מחשבון Tuya נשארים
+        let found = await Discovery.scan(progress: { p in
             Task { @MainActor in self.progress = p }
-        }
-        discovered = found.sorted { ($0.kind.rawValue, $0.ip) < ($1.kind.rawValue, $1.ip) }
-        // רענון פרטים טכניים של מכשירים שכבר באפליקציה, בלי לגעת בשם, בסוג ובחדר
-        for f in found {
-            mutate(f.ip) { d in
-                d.ports = f.ports
-                if !f.model.isEmpty { d.model = f.model }
-                if d.mac.isEmpty { d.mac = f.mac }
-            }
-        }
+        }, onFound: { d in
+            Task { @MainActor in self.mergeFound(d) }
+        })
+        for d in found { mergeFound(d) }
         scanning = false
-        addLog("נמצאו \(found.count) מכשירים")
-        if !tuyaCloud.isEmpty { await matchTuya() }
+        addLog("נמצאו \(found.count) מכשירים ברשת")
+        if !tuyaCloud.isEmpty {
+            await matchTuya()
+            await buildTuyaCloudDevices()
+        }
+    }
+
+    /// מכשיר שנמצא בסריקה: נכנס מיד לרשימה (או מעדכן את מה שכבר בה)
+    private func mergeFound(_ f: Device) {
+        var d = f
+        // מכשיר Tuya שכבר שויך לחשבון שומר את השם והמפתח
+        if let old = discovered.first(where: { $0.ip == f.ip }), old.brand == .tuya, old.config["id"] != nil, f.brand == .tuya {
+            d = old
+            d.ports = f.ports
+        }
+        if let i = discovered.firstIndex(where: { $0.ip == d.ip }) { discovered[i] = d } else { discovered.append(d) }
+        // רענון פרטים טכניים של מכשירים שכבר באפליקציה, בלי לגעת בשם, בסוג ובחדר
+        mutate(f.ip) { x in
+            x.ports = f.ports
+            if !f.model.isEmpty { x.model = f.model }
+            if x.mac.isEmpty { x.mac = f.mac }
+        }
+    }
+
+    /// כתובת להצגה: IP, או "חשבון Tuya" למכשירים שנשלטים דרך החשבון
+    func address(_ d: Device) -> String {
+        d.ip.hasPrefix("tuya:") ? "דרך חשבון Tuya" : d.ip
+    }
+
+    /// האם מכשיר זוהה (יצרן או סוג מוכר), לעומת מכשיר כללי ברשת
+    func isRecognized(_ d: Device) -> Bool {
+        d.brand != .unknown || d.kind != .other
     }
 
     // MARK: - Tuya account (שמות המפסקים והמפתחות)
@@ -174,6 +199,40 @@ final class Store: ObservableObject {
         saveAll()
         addLog("Tuya: \(list.count) מכשירים בחשבון")
         await matchTuya()
+        await buildTuyaCloudDevices()
+    }
+
+    /// מכשירי Tuya שנשלטים דרך החשבון: מה שלא נמצא ברשת, ולכל מפסק מרובה ערוצים – ערוץ נפרד עם השם שלו
+    func buildTuyaCloudDevices() async {
+        await TuyaSession.shared.prefetch(tuyaCloud.map { $0.id })
+        var built: [Device] = []
+        for c in tuyaCloud {
+            let st = await TuyaSession.shared.status(c.id) ?? [:]
+            let switchCodes = st.keys.filter { $0.hasPrefix("switch_") && Int($0.dropFirst(7)) != nil }
+            let multi = switchCodes.count > 1
+            var names: [String: String] = [:]
+            if multi { names = await TuyaSession.shared.channelNames(c.id) }
+            let channels = c.channels(status: st, names: names)
+            let local = (devices + discovered).first { $0.config["id"] == c.id && !$0.ip.hasPrefix("tuya:") }
+            if !multi, local != nil { continue }   // נמצא ברשת: שליטה מקומית
+            if multi, let l = local, !isAdded(l.ip) { discovered.removeAll { $0.ip == l.ip } }
+            for ch in channels {
+                var d = Device(ip: channels.count > 1 ? "tuya:\(c.id):\(ch.code)" : "tuya:\(c.id)",
+                               name: ch.name, brand: .tuya, kind: c.kind)
+                d.model = c.productName
+                d.config = ["cloud": "1", "id": c.id, "code": ch.code, "key": c.localKey]
+                built.append(d)
+            }
+        }
+        discovered.removeAll { $0.ip.hasPrefix("tuya:") }
+        // מכשירי Tuya ברשת שלא שויכו מיוצגים עכשיו ברשימה מהחשבון, עם השם שלהם
+        discovered.removeAll { $0.brand == .tuya && $0.config["id"] == nil && !isAdded($0.ip) }
+        discovered.append(contentsOf: built)
+        // מכשירים שכבר באפליקציה מקבלים את השם העדכני מהחשבון
+        for b in built {
+            if let i = devices.firstIndex(where: { $0.ip == b.ip }), devices[i].name != b.name { devices[i].name = b.name }
+        }
+        saveAll()
     }
 
     func tuyaCloudDevice(for d: Device) -> TuyaCloudDevice? {
@@ -200,10 +259,10 @@ final class Store: ObservableObject {
 
     /// מוצא איזה מכשיר בחשבון יושב באיזו כתובת: רק המפתח הנכון מצליח לדבר עם המכשיר
     func matchTuya() async {
-        let used = Set(devices.compactMap { $0.config["id"] })
-        var pending = (devices + discovered.filter { !isAdded($0.ip) }).filter { $0.brand == .tuya }
+        let used = Set(devices.filter { !$0.ip.hasPrefix("tuya:") }.compactMap { $0.config["id"] })
+        var pending = (devices + discovered.filter { !isAdded($0.ip) }).filter { $0.brand == .tuya && !$0.ip.hasPrefix("tuya:") }
         // מכשירים שכבר משויכים: רק מעדכנים שם/סוג אם השתנו בחשבון
-        for d in pending {
+        for d in pending where d.config["cloud"] != "1" {
             if let c = tuyaCloudDevice(for: d), d.name != c.name { assignTuya(ip: d.ip, cloudID: c.id) }
         }
         pending.removeAll { $0.config["id"] != nil && !($0.config["key"] ?? "").isEmpty }

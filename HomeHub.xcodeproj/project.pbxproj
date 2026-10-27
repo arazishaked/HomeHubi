@@ -16,6 +16,7 @@
 		D8A5533CDDEAD12795BDC44F /* Discovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D0F935398CFE48F1763F94 /* Discovery.swift */; };
 		92D795061E07D53F14B0E3DB /* HomeHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C22BC2B97A41C10D2887DF /* HomeHubApp.swift */; };
 		6F311409482C86B2EB1AF2D8 /* HomeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6579037D86F13EE7EB46D14B /* HomeViews.swift */; };
+		DF5F201453ABB1FEA70B631A /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BBE2B0A93F97AE43D1498C /* Layout.swift */; };
 		3890A9D6645343B5AFB79723 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C911A59ADB5E1C83CAB96166 /* Models.swift */; };
 		804F08C7545CC7572DD89B8E /* Net.swift in Sources */ = {isa = PBXBuildFile; fileRef = 924CA72E094A74DD5C90CF72 /* Net.swift */; };
 		4871E04EAA1B46AAE9AA282E /* Ports.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F24C888C2C80EF7DF52D300 /* Ports.swift */; };
@@ -38,6 +39,7 @@
 		17D0F935398CFE48F1763F94 /* Discovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Discovery.swift; sourceTree = "<group>"; };
 		D0C22BC2B97A41C10D2887DF /* HomeHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeHubApp.swift; sourceTree = "<group>"; };
 		6579037D86F13EE7EB46D14B /* HomeViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViews.swift; sourceTree = "<group>"; };
+		E7BBE2B0A93F97AE43D1498C /* Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Layout.swift; sourceTree = "<group>"; };
 		C911A59ADB5E1C83CAB96166 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		924CA72E094A74DD5C90CF72 /* Net.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Net.swift; sourceTree = "<group>"; };
 		6F24C888C2C80EF7DF52D300 /* Ports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ports.swift; sourceTree = "<group>"; };
@@ -77,6 +79,7 @@
 				17D0F935398CFE48F1763F94 /* Discovery.swift */,
 				D0C22BC2B97A41C10D2887DF /* HomeHubApp.swift */,
 				6579037D86F13EE7EB46D14B /* HomeViews.swift */,
+				E7BBE2B0A93F97AE43D1498C /* Layout.swift */,
 				C911A59ADB5E1C83CAB96166 /* Models.swift */,
 				924CA72E094A74DD5C90CF72 /* Net.swift */,
 				6F24C888C2C80EF7DF52D300 /* Ports.swift */,
@@ -176,6 +179,7 @@
 				D8A5533CDDEAD12795BDC44F /* Discovery.swift in Sources */,
 				92D795061E07D53F14B0E3DB /* HomeHubApp.swift in Sources */,
 				6F311409482C86B2EB1AF2D8 /* HomeViews.swift in Sources */,
+				DF5F201453ABB1FEA70B631A /* Layout.swift in Sources */,
 				3890A9D6645343B5AFB79723 /* Models.swift in Sources */,
 				804F08C7545CC7572DD89B8E /* Net.swift in Sources */,
 				4871E04EAA1B46AAE9AA282E /* Ports.swift in Sources */,

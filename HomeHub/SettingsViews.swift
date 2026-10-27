@@ -6,8 +6,8 @@ struct SettingsView: View {
     @EnvironmentObject var store: Store
 
     var body: some View {
-        List {
-            Section {
+        GList {
+            GSection {
                 row(.scan, "סריקת רשת", "dot.radiowaves.left.and.right",
                     store.discovered.isEmpty ? nil : "\(store.discovered.count) נמצאו")
                 row(.myDevices, "המכשירים שלי", "square.stack.3d.up", "\(store.devices.count)")
@@ -16,7 +16,7 @@ struct SettingsView: View {
             } footer: {
                 Text("סורקים את הרשת ובוחרים אילו מכשירים להוריד לאפליקציה.")
             }
-            Section {
+            GSection {
                 row(.connections, "קישורים", "cable.connector.horizontal", "\(store.connections.count)")
                 row(.rooms, "חדרים", "door.left.hand.open", "\(store.rooms.count)")
             } header: {
@@ -24,7 +24,7 @@ struct SettingsView: View {
             } footer: {
                 Text("קישורים מגדירים איזה כבל מחובר מאיזו יציאה לאיזו כניסה. חדרים מסדרים את מסך הבית.")
             }
-            Section {
+            GSection {
                 row(.tuya, "חשבון Tuya / Smart Life", "person.crop.circle.badge.checkmark",
                     store.tuyaCloud.isEmpty ? "לא מחובר" : "\(store.tuyaCloud.count) מכשירים")
             } header: {
@@ -32,7 +32,7 @@ struct SettingsView: View {
             } footer: {
                 Text("מחברים פעם אחת כדי שהמפסקים, השקעים והנורות של Tuya יופיעו עם השמות שנתת להם באפליקציית Smart Life.")
             }
-            Section("מערכת") {
+            GSection("מערכת") {
                 row(.log, "יומן פעולות", "list.bullet.rectangle", nil)
             }
         }
@@ -40,7 +40,7 @@ struct SettingsView: View {
     }
 
     func row(_ r: Route, _ title: String, _ icon: String, _ badge: String?) -> some View {
-        NavigationLink(value: r) {
+        GLink(value: r) {
             HStack {
                 Label(title, systemImage: icon)
                 Spacer()
@@ -56,8 +56,8 @@ struct ScanView: View {
     @EnvironmentObject var store: Store
 
     var body: some View {
-        List {
-            Section {
+        GList {
+            GSection {
                 if store.scanning {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("סורק את הרשת… \(Int(store.progress * 100))%").font(.subheadline)
@@ -73,9 +73,42 @@ struct ScanView: View {
                 Text("בפעם הראשונה iOS יבקש אישור לגישה לרשת המקומית. אם לא נמצא כלום, סרוק שוב.")
             }
 
-            if !store.discovered.isEmpty {
-                Section("נמצאו ברשת (\(store.discovered.count))") {
-                    ForEach(store.discovered) { d in ScanRow(d: d) }
+            let tuya = store.discovered.filter { $0.ip.hasPrefix("tuya:") }
+            let known = store.discovered.filter { !$0.ip.hasPrefix("tuya:") && store.isRecognized($0) }
+            let others = store.discovered.filter { !$0.ip.hasPrefix("tuya:") && !store.isRecognized($0) }
+            if !known.isEmpty {
+                GSection("מכשירים שזוהו (\(known.count))") {
+                    ForEach(known.sorted { ($0.kind.rawValue, $0.name) < ($1.kind.rawValue, $1.name) }) { d in ScanRow(d: d) }
+                }
+            }
+            if !tuya.isEmpty {
+                GSection {
+                    ForEach(tuya.sorted { $0.name < $1.name }) { d in ScanRow(d: d) }
+                } header: {
+                    Text("מפסקים ומכשירים מחשבון Tuya (\(tuya.count))")
+                } footer: {
+                    Text("השמות כפי שהם מופיעים באפליקציית Smart Life. מפסק עם כמה ערוצים מופיע כערוץ נפרד לכל מנורה.")
+                }
+            }
+            if store.tuyaCloud.isEmpty && store.discovered.contains(where: { $0.brand == .tuya }) {
+                GSection {
+                    GLink(value: .tuya) { Label("חבר חשבון Tuya כדי לראות את שמות המפסקים", systemImage: "person.crop.circle.badge.checkmark") }
+                }
+            }
+            if !others.isEmpty {
+                GSection {
+                    DisclosureGroup {
+                        VStack(spacing: 0) {
+                            ForEach(others.sorted { $0.ip.compare($1.ip, options: .numeric) == .orderedAscending }) { d in
+                                Divider()
+                                ScanRow(d: d).padding(.vertical, 8)
+                            }
+                        }
+                    } label: {
+                        Text("מכשירים נוספים ברשת (\(others.count))").foregroundStyle(.primary)
+                    }
+                } footer: {
+                    Text("מכשירים שלא זוהה להם יצרן (טלפונים, מחשבים, נתבים). אפשר להוסיף כל אחד ולקבוע לו סוג ושם.")
                 }
             }
         }
@@ -100,7 +133,7 @@ struct ScanRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(d.name).font(.body.weight(.semibold))
                 Text("\(d.kind.title) · \(d.brand.title) \(d.model)").font(.caption).foregroundStyle(.secondary)
-                Text(d.ip).font(.caption2).foregroundStyle(.secondary)
+                Text(store.address(d)).font(.caption2).foregroundStyle(.secondary)
             }
             Spacer()
             if store.isAdded(d.ip) {
@@ -114,7 +147,7 @@ struct ScanRow: View {
                 }
             } else {
                 Menu {
-                    Section("הוסף לחדר") {
+                    GSection("הוסף לחדר") {
                         ForEach(store.rooms) { r in
                             Button { store.add(d, room: r.id) } label: { Label(r.name, systemImage: r.icon) }
                         }
@@ -139,7 +172,7 @@ struct MyDevicesView: View {
     @EnvironmentObject var store: Store
 
     var body: some View {
-        List {
+        GList {
             ForEach(store.rooms) { r in
                 section(r.name, r.id)
             }
@@ -160,12 +193,10 @@ struct MyDevicesView: View {
     func section(_ title: String, _ id: UUID?) -> some View {
         let list = store.roomDevices(id)
         if !list.isEmpty {
-            Section(title) {
+            GSection(title) {
                 ForEach(list) { d in
-                    NavigationLink(value: Route.deviceSettings(d.ip)) { DeviceRow(d: d) }
-                }
-                .onDelete { idx in
-                    for i in idx { store.remove(list[i].ip) }
+                    GLink(value: Route.deviceSettings(d.ip)) { DeviceRow(d: d) }
+                        .contextMenu { Button("הסר מהאפליקציה", role: .destructive) { store.remove(d.ip) } }
                 }
             }
         }
@@ -178,12 +209,12 @@ struct ConnectionsSettingsView: View {
     @EnvironmentObject var store: Store
 
     var body: some View {
-        List {
+        GList {
             ForEach(store.rooms) { r in section(r.name, r.id) }
             section(store.rooms.isEmpty ? "מכשירים" : "ללא חדר", nil)
 
             if !store.connections.isEmpty {
-                Section {
+                GSection {
                     ForEach(store.connections) { c in
                         VStack(alignment: .leading, spacing: 2) {
                             Text("\(store.name(c.fromIP)) · \(store.portName(c.fromIP, c.fromPort))")
@@ -191,12 +222,12 @@ struct ConnectionsSettingsView: View {
                             Text("← \(store.name(c.toIP)) · \(store.portName(c.toIP, c.toPort))")
                                 .font(.subheadline).foregroundStyle(.secondary)
                         }
-                    }
-                    .onDelete { idx in
-                        for id in idx.map({ store.connections[$0].id }) { store.unbind(id) }
+                        .contextMenu { Button("נתק", role: .destructive) { store.unbind(c.id) } }
                     }
                 } header: {
                     Text("כל החיבורים (\(store.connections.count))")
+                } footer: {
+                    Text("לחיצה ארוכה על חיבור כדי לנתק אותו.")
                 }
             }
         }
@@ -218,11 +249,11 @@ struct ConnectionsSettingsView: View {
     func section(_ title: String, _ id: UUID?) -> some View {
         let list = store.roomDevices(id).filter { !ports(for: $0).isEmpty }
         if !list.isEmpty {
-            Section(title) {
+            GSection(title) {
                 ForEach(list) { d in
                     let total = ports(for: d).count
                     let used = store.connectedCount(d)
-                    NavigationLink(value: Route.deviceConnections(d.ip)) {
+                    GLink(value: Route.deviceConnections(d.ip)) {
                         HStack(spacing: 12) {
                             DeviceIcon(kind: d.kind, size: 28).foregroundStyle(Color.accentColor)
                             VStack(alignment: .leading, spacing: 2) {
@@ -250,7 +281,7 @@ struct DeviceConnectionsView: View {
     var body: some View {
         if let d = store.device(ip) {
             let all = ports(for: d)
-            List {
+            GList {
                 portSection("יציאות", all.filter { $0.dir == .output }, d)
                 portSection("כניסות", all.filter { $0.dir == .input }, d)
             }
@@ -266,7 +297,7 @@ struct DeviceConnectionsView: View {
     @ViewBuilder
     func portSection(_ title: String, _ list: [Port], _ d: Device) -> some View {
         if !list.isEmpty {
-            Section(title) {
+            GSection(title) {
                 ForEach(list) { p in
                     let c = store.connection(ip, p)
                     Button { editing = p } label: {
@@ -287,7 +318,8 @@ struct DeviceConnectionsView: View {
                             Image(systemName: "chevron.forward").font(.caption.weight(.semibold)).foregroundStyle(.tertiary)
                         }
                     }
-                    .swipeActions {
+                    .buttonStyle(.plain)
+                    .contextMenu {
                         if let c = c {
                             Button("נתק", role: .destructive) { store.unbind(c.id) }
                         }
@@ -338,9 +370,9 @@ struct PortBindingSheet: View {
     var body: some View {
         let current = store.connection(ip, port)
         NavigationStack {
-            List {
+            GList {
                 if let c = current {
-                    Section {
+                    GSection {
                         if port.dir == .input {
                             Toggle("מקור ברירת מחדל", isOn: Binding(get: { store.connection(ip, port)?.isDefault ?? false },
                                                                    set: { store.setDefault(c.id, $0) }))
@@ -351,7 +383,7 @@ struct PortBindingSheet: View {
                         Text("ברירת מחדל: הקלט שהמכשיר עובר אליו כשהוא נדלק עם הטלוויזיה. הפעלה משותפת: כשהמכשיר בצד הכניסה נדלק או נכבה, המכשיר בצד היציאה נדלק או נכבה איתו.")
                     }
                 }
-                Section {
+                GSection {
                     ForEach(candidates) { cand in
                         let taken = store.connection(cand.device.ip, cand.port)
                         let isCurrent = taken?.id == current?.id && taken != nil
@@ -418,9 +450,11 @@ struct RoomsView: View {
     @State private var newName = ""
 
     var body: some View {
-        List {
+        GList {
+            if !store.rooms.isEmpty {
+            GSection {
             ForEach(store.rooms) { r in
-                NavigationLink(value: Route.room(r.id)) {
+                GLink(value: Route.room(r.id)) {
                     HStack(spacing: 12) {
                         Image(systemName: r.icon).frame(width: 28).foregroundStyle(Color.accentColor)
                         Text(r.name)
@@ -428,9 +462,22 @@ struct RoomsView: View {
                         Text("\(store.roomDevices(r.id).count) מכשירים").font(.caption).foregroundStyle(.secondary)
                     }
                 }
+                .contextMenu {
+                    if let idx = store.rooms.firstIndex(where: { $0.id == r.id }) {
+                        if idx > 0 {
+                            Button { store.moveRooms(from: IndexSet(integer: idx), to: idx - 1) } label: { Label("הזז למעלה", systemImage: "arrow.up") }
+                        }
+                        if idx < store.rooms.count - 1 {
+                            Button { store.moveRooms(from: IndexSet(integer: idx), to: idx + 2) } label: { Label("הזז למטה", systemImage: "arrow.down") }
+                        }
+                        Button(role: .destructive) { store.deleteRooms(at: IndexSet(integer: idx)) } label: { Label("מחק חדר", systemImage: "trash") }
+                    }
+                }
             }
-            .onDelete { store.deleteRooms(at: $0) }
-            .onMove { store.moveRooms(from: $0, to: $1) }
+            } footer: {
+                Text("לחיצה ארוכה על חדר: הזזה או מחיקה.")
+            }
+            }
         }
         .overlay {
             if store.rooms.isEmpty {
@@ -448,9 +495,6 @@ struct RoomsView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button { newName = ""; adding = true } label: { Image(systemName: "plus") }
                     .accessibilityLabel("חדר חדש")
-            }
-            if !store.rooms.isEmpty {
-                ToolbarItem(placement: .navigationBarTrailing) { EditButton() }
             }
         }
         .alert("חדר חדש", isPresented: $adding) {
@@ -483,8 +527,8 @@ struct RoomEditView: View {
         let tvs = devs.filter { $0.kind == .tv }
         let audio = devs.filter { $0.kind == .receiver || $0.kind == .tv }
         let resolvedAudio = store.audioEndpoint(id)
-        Form {
-            Section("חדר") {
+        GList {
+            GSection("חדר") {
                 TextField("שם", text: Binding(get: { store.room(id)?.name ?? "" }, set: { v in store.updateRoom(id) { $0.name = v } }))
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 44), spacing: 8)], spacing: 8) {
                     ForEach(Room.icons, id: \.self) { icon in
@@ -503,19 +547,19 @@ struct RoomEditView: View {
                 .padding(.vertical, 4)
             }
 
-            Section {
-                Picker("תמונה (וידאו)", selection: Binding<String?>(get: { store.room(id)?.videoIP },
+            GSection {
+                GPicker("תמונה (וידאו)", selection: Binding<String?>(get: { store.room(id)?.videoIP },
                                                                     set: { v in store.updateRoom(id) { $0.videoIP = v } })) {
                     Text("אוטומטי").tag(String?.none)
                     ForEach(tvs) { Text($0.name).tag(Optional($0.ip)) }
                 }
-                Picker("סאונד", selection: Binding<String?>(get: { store.room(id)?.audioIP },
+                GPicker("סאונד", selection: Binding<String?>(get: { store.room(id)?.audioIP },
                                                            set: { v in store.updateRoom(id) { $0.audioIP = v; $0.tvAudioInput = nil } })) {
                     Text("אוטומטי").tag(String?.none)
                     ForEach(audio) { Text($0.name).tag(Optional($0.ip)) }
                 }
                 if let rx = resolvedAudio, rx.kind == .receiver {
-                    Picker("קלט ברסיבר לאפליקציות הטלוויזיה",
+                    GPicker("קלט ברסיבר לאפליקציות הטלוויזיה",
                            selection: Binding<String?>(get: { store.room(id)?.tvAudioInput },
                                                        set: { v in store.updateRoom(id) { $0.tvAudioInput = v } })) {
                         Text("לפי הקישורים").tag(String?.none)
@@ -529,7 +573,7 @@ struct RoomEditView: View {
                 Text("כמו ב-Control4: מי מציג את התמונה ומי מנהל את הסאונד בחדר. כשבוחרים מקור, האפליקציה הולכת לפי הקישורים ומחליפה את הקלטים בדרך.")
             }
 
-            Section {
+            GSection {
                 ForEach(store.devices) { d in
                     Button {
                         store.setRoom(d.ip, d.roomID == id ? nil : id)
@@ -561,9 +605,9 @@ struct TuyaAccountView: View {
     @State private var ok = false
 
     var body: some View {
-        Form {
-            Section {
-                Picker("אזור", selection: Binding(get: { store.tuyaRegion }, set: { store.tuyaRegion = $0 })) {
+        GList {
+            GSection {
+                GPicker("אזור", selection: Binding(get: { store.tuyaRegion }, set: { store.tuyaRegion = $0 })) {
                     ForEach(TuyaCloud.regions.map { $0.id }, id: \.self) { rid in
                         Text(TuyaCloud.regions.first { $0.id == rid }?.title ?? rid).tag(rid)
                     }
@@ -578,7 +622,7 @@ struct TuyaAccountView: View {
             } footer: {
                 Text("ב-iot.tuya.com: Cloud ← Development ← Create Cloud Project (אזור Central Europe). בלשונית Devices ← Link Tuya App Account סורקים את הקוד מאפליקציית Smart Life. את Access ID ו-Access Secret מעתיקים מ-Overview.")
             }
-            Section {
+            GSection {
                 Button {
                     msg = ""; ok = false
                     Task {
@@ -595,7 +639,7 @@ struct TuyaAccountView: View {
                 if !msg.isEmpty { Text(msg).font(.footnote).foregroundStyle(ok ? Color.green : Color.red) }
             }
             if !store.tuyaCloud.isEmpty {
-                Section {
+                GSection {
                     ForEach(store.tuyaCloud) { c in
                         let local = (store.devices + store.discovered).first { $0.config["id"] == c.id }
                         HStack(spacing: 12) {
@@ -629,7 +673,11 @@ struct LogView: View {
     @EnvironmentObject var store: Store
 
     var body: some View {
-        List(store.log, id: \.self) { Text($0).font(.footnote) }
+        GList {
+            if !store.log.isEmpty {
+                GSection { ForEach(store.log, id: \.self) { Text($0).font(.footnote) } }
+            }
+        }
             .overlay { if store.log.isEmpty { Text("אין פעולות עדיין").foregroundStyle(.secondary) } }
             .navigationTitle("יומן פעולות")
     }

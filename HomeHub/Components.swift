@@ -87,7 +87,7 @@ struct DeviceRow: View {
                 .foregroundStyle(Color.accentColor)
             VStack(alignment: .leading, spacing: 2) {
                 Text(d.name).font(.body.weight(.semibold))
-                Text(subtitle ?? "\(d.brand.title) \(d.model) · \(d.ip)")
+                Text(subtitle ?? "\(d.brand.title) \(d.model) · \(store.address(d))")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
