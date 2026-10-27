@@ -1,0 +1,34 @@
+name: Build IPA
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip project if uploaded as zip
+        run: |
+          if ! find . -maxdepth 4 -name HomeHub.xcodeproj | grep -q .; then
+            Z=$(find . -maxdepth 3 -name "*.zip" | head -1)
+            [ -n "$Z" ] && unzip -q "$Z"
+          fi
+      - name: Build (unsigned)
+        run: |
+          set -o pipefail
+          PROJ=$(find . -maxdepth 4 -name HomeHub.xcodeproj -not -path "*/build/*" | head -1)
+          echo "Project: $PROJ"
+          cd "$(dirname "$PROJ")"
+          xcodebuild -project HomeHub.xcodeproj -scheme HomeHub \
+            -configuration Release -sdk iphoneos -derivedDataPath "$GITHUB_WORKSPACE/build" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+      - name: Package IPA
+        run: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/HomeHub.app Payload/
+          zip -qr HomeHub.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HomeHub-ipa
+          path: HomeHub.ipa
