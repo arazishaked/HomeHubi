@@ -1,0 +1,286 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BB3DFD850D07F4CC7F5D50FE /* AppIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6F36CC47CAB9EFDA0E067B9 /* AppIcons.swift */; };
+		1422244A8D9E19299F27E93E /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A91EF457A4A7EC05916ED83 /* Components.swift */; };
+		B5C45532A1D8F7F36F8CF763 /* Controllers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C238632E52A03CC5A584069 /* Controllers.swift */; };
+		0BCF15F90D60B61400575150 /* DeviceViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1639B794B0DDD4AFC61BF03E /* DeviceViews.swift */; };
+		98A8FA9848C9E8AAAC6B76D9 /* Dial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF37D643FF86F82B0BB19CD /* Dial.swift */; };
+		D8A5533CDDEAD12795BDC44F /* Discovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D0F935398CFE48F1763F94 /* Discovery.swift */; };
+		92D795061E07D53F14B0E3DB /* HomeHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C22BC2B97A41C10D2887DF /* HomeHubApp.swift */; };
+		6F311409482C86B2EB1AF2D8 /* HomeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6579037D86F13EE7EB46D14B /* HomeViews.swift */; };
+		3890A9D6645343B5AFB79723 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C911A59ADB5E1C83CAB96166 /* Models.swift */; };
+		804F08C7545CC7572DD89B8E /* Net.swift in Sources */ = {isa = PBXBuildFile; fileRef = 924CA72E094A74DD5C90CF72 /* Net.swift */; };
+		4871E04EAA1B46AAE9AA282E /* Ports.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F24C888C2C80EF7DF52D300 /* Ports.swift */; };
+		A42FFD28A53F8794803D96C2 /* SettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7637C76352806F68CD9467CA /* SettingsViews.swift */; };
+		DCEC7B69AA515BE79D9E7491 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12FB6584DC351C9D83FF153F /* Store.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D2A57DC1D883FD21FB995169 /* HomeHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HomeHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		707A1B8AA6F495C9BF6658C2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A6F36CC47CAB9EFDA0E067B9 /* AppIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcons.swift; sourceTree = "<group>"; };
+		0A91EF457A4A7EC05916ED83 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		2C238632E52A03CC5A584069 /* Controllers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controllers.swift; sourceTree = "<group>"; };
+		1639B794B0DDD4AFC61BF03E /* DeviceViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceViews.swift; sourceTree = "<group>"; };
+		3AF37D643FF86F82B0BB19CD /* Dial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dial.swift; sourceTree = "<group>"; };
+		17D0F935398CFE48F1763F94 /* Discovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Discovery.swift; sourceTree = "<group>"; };
+		D0C22BC2B97A41C10D2887DF /* HomeHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeHubApp.swift; sourceTree = "<group>"; };
+		6579037D86F13EE7EB46D14B /* HomeViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViews.swift; sourceTree = "<group>"; };
+		C911A59ADB5E1C83CAB96166 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		924CA72E094A74DD5C90CF72 /* Net.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Net.swift; sourceTree = "<group>"; };
+		6F24C888C2C80EF7DF52D300 /* Ports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ports.swift; sourceTree = "<group>"; };
+		7637C76352806F68CD9467CA /* SettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViews.swift; sourceTree = "<group>"; };
+		12FB6584DC351C9D83FF153F /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4F6F5CC3FCCF73F75AE9CCF4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FAD58DE7366495DB4650CFEF = {
+			isa = PBXGroup;
+			children = (
+				DB0F6F37EBEB6EA094891243 /* HomeHub */,
+				86024CAD1E83101D97359D73 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DB0F6F37EBEB6EA094891243 /* HomeHub */ = {
+			isa = PBXGroup;
+			children = (
+				A6F36CC47CAB9EFDA0E067B9 /* AppIcons.swift */,
+				0A91EF457A4A7EC05916ED83 /* Components.swift */,
+				2C238632E52A03CC5A584069 /* Controllers.swift */,
+				1639B794B0DDD4AFC61BF03E /* DeviceViews.swift */,
+				3AF37D643FF86F82B0BB19CD /* Dial.swift */,
+				17D0F935398CFE48F1763F94 /* Discovery.swift */,
+				D0C22BC2B97A41C10D2887DF /* HomeHubApp.swift */,
+				6579037D86F13EE7EB46D14B /* HomeViews.swift */,
+				C911A59ADB5E1C83CAB96166 /* Models.swift */,
+				924CA72E094A74DD5C90CF72 /* Net.swift */,
+				6F24C888C2C80EF7DF52D300 /* Ports.swift */,
+				7637C76352806F68CD9467CA /* SettingsViews.swift */,
+				12FB6584DC351C9D83FF153F /* Store.swift */,
+				707A1B8AA6F495C9BF6658C2 /* Info.plist */,
+			);
+			path = HomeHub;
+			sourceTree = "<group>";
+		};
+		86024CAD1E83101D97359D73 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2A57DC1D883FD21FB995169 /* HomeHub.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		42AEFBAE01D2DFD981F7DA7D /* HomeHub */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DD5B959833E219C36151D647 /* Build configuration list for PBXNativeTarget "HomeHub" */;
+			buildPhases = (
+				F2AB5FB218DA8B84623F4557 /* Sources */,
+				4F6F5CC3FCCF73F75AE9CCF4 /* Frameworks */,
+				55B558C7EF820E6E00E5993B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HomeHub;
+			productName = HomeHub;
+			productReference = D2A57DC1D883FD21FB995169 /* HomeHub.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		46F86FAA6BBF9AC94A7E4595 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					42AEFBAE01D2DFD981F7DA7D = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 2CA666E9AB7FD185F98B8152 /* Build configuration list for PBXProject "HomeHub" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = he;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				he,
+				Base,
+			);
+			mainGroup = FAD58DE7366495DB4650CFEF;
+			productRefGroup = 86024CAD1E83101D97359D73 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				42AEFBAE01D2DFD981F7DA7D /* HomeHub */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		55B558C7EF820E6E00E5993B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F2AB5FB218DA8B84623F4557 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB3DFD850D07F4CC7F5D50FE /* AppIcons.swift in Sources */,
+				1422244A8D9E19299F27E93E /* Components.swift in Sources */,
+				B5C45532A1D8F7F36F8CF763 /* Controllers.swift in Sources */,
+				0BCF15F90D60B61400575150 /* DeviceViews.swift in Sources */,
+				98A8FA9848C9E8AAAC6B76D9 /* Dial.swift in Sources */,
+				D8A5533CDDEAD12795BDC44F /* Discovery.swift in Sources */,
+				92D795061E07D53F14B0E3DB /* HomeHubApp.swift in Sources */,
+				6F311409482C86B2EB1AF2D8 /* HomeViews.swift in Sources */,
+				3890A9D6645343B5AFB79723 /* Models.swift in Sources */,
+				804F08C7545CC7572DD89B8E /* Net.swift in Sources */,
+				4871E04EAA1B46AAE9AA282E /* Ports.swift in Sources */,
+				A42FFD28A53F8794803D96C2 /* SettingsViews.swift in Sources */,
+				DCEC7B69AA515BE79D9E7491 /* Store.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2D53B50AE2273FABAAF8B8FA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D4B2141B77146EF47E948847 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		FA7C752E798F561D7D156D98 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HomeHub/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.homehub.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		22F75101C717335ACF4089A0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = HomeHub/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.homehub.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2CA666E9AB7FD185F98B8152 /* Build configuration list for PBXProject "HomeHub" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D53B50AE2273FABAAF8B8FA /* Debug */,
+				D4B2141B77146EF47E948847 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DD5B959833E219C36151D647 /* Build configuration list for PBXNativeTarget "HomeHub" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA7C752E798F561D7D156D98 /* Debug */,
+				22F75101C717335ACF4089A0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 46F86FAA6BBF9AC94A7E4595 /* Project object */;
+}
