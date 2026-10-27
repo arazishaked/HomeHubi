@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		BB3DFD850D07F4CC7F5D50FE /* AppIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6F36CC47CAB9EFDA0E067B9 /* AppIcons.swift */; };
+		10D8C1A87135CFF09979BB6E /* Bonjour.swift in Sources */ = {isa = PBXBuildFile; fileRef = A510B59B4F6BD6F9641E789C /* Bonjour.swift */; };
 		1422244A8D9E19299F27E93E /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A91EF457A4A7EC05916ED83 /* Components.swift */; };
 		B5C45532A1D8F7F36F8CF763 /* Controllers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C238632E52A03CC5A584069 /* Controllers.swift */; };
 		0BCF15F90D60B61400575150 /* DeviceViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1639B794B0DDD4AFC61BF03E /* DeviceViews.swift */; };
@@ -20,12 +21,16 @@
 		4871E04EAA1B46AAE9AA282E /* Ports.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F24C888C2C80EF7DF52D300 /* Ports.swift */; };
 		A42FFD28A53F8794803D96C2 /* SettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7637C76352806F68CD9467CA /* SettingsViews.swift */; };
 		DCEC7B69AA515BE79D9E7491 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12FB6584DC351C9D83FF153F /* Store.swift */; };
+		AC5C39FE27C05B589EAE2457 /* TuyaCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B3129E4FE96A04AE93C6BED /* TuyaCloud.swift */; };
+		D2F5194FE84B22D9A53E0650 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 32BB636196F91ED59D7A4919 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		D2A57DC1D883FD21FB995169 /* HomeHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HomeHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		707A1B8AA6F495C9BF6658C2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		32BB636196F91ED59D7A4919 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A6F36CC47CAB9EFDA0E067B9 /* AppIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcons.swift; sourceTree = "<group>"; };
+		A510B59B4F6BD6F9641E789C /* Bonjour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bonjour.swift; sourceTree = "<group>"; };
 		0A91EF457A4A7EC05916ED83 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		2C238632E52A03CC5A584069 /* Controllers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controllers.swift; sourceTree = "<group>"; };
 		1639B794B0DDD4AFC61BF03E /* DeviceViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceViews.swift; sourceTree = "<group>"; };
@@ -38,6 +43,7 @@
 		6F24C888C2C80EF7DF52D300 /* Ports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ports.swift; sourceTree = "<group>"; };
 		7637C76352806F68CD9467CA /* SettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViews.swift; sourceTree = "<group>"; };
 		12FB6584DC351C9D83FF153F /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		2B3129E4FE96A04AE93C6BED /* TuyaCloud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TuyaCloud.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				A6F36CC47CAB9EFDA0E067B9 /* AppIcons.swift */,
+				A510B59B4F6BD6F9641E789C /* Bonjour.swift */,
 				0A91EF457A4A7EC05916ED83 /* Components.swift */,
 				2C238632E52A03CC5A584069 /* Controllers.swift */,
 				1639B794B0DDD4AFC61BF03E /* DeviceViews.swift */,
@@ -75,6 +82,8 @@
 				6F24C888C2C80EF7DF52D300 /* Ports.swift */,
 				7637C76352806F68CD9467CA /* SettingsViews.swift */,
 				12FB6584DC351C9D83FF153F /* Store.swift */,
+				2B3129E4FE96A04AE93C6BED /* TuyaCloud.swift */,
+				32BB636196F91ED59D7A4919 /* Assets.xcassets */,
 				707A1B8AA6F495C9BF6658C2 /* Info.plist */,
 			);
 			path = HomeHub;
@@ -147,6 +156,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2F5194FE84B22D9A53E0650 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,6 +168,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB3DFD850D07F4CC7F5D50FE /* AppIcons.swift in Sources */,
+				10D8C1A87135CFF09979BB6E /* Bonjour.swift in Sources */,
 				1422244A8D9E19299F27E93E /* Components.swift in Sources */,
 				B5C45532A1D8F7F36F8CF763 /* Controllers.swift in Sources */,
 				0BCF15F90D60B61400575150 /* DeviceViews.swift in Sources */,
@@ -170,6 +181,7 @@
 				4871E04EAA1B46AAE9AA282E /* Ports.swift in Sources */,
 				A42FFD28A53F8794803D96C2 /* SettingsViews.swift in Sources */,
 				DCEC7B69AA515BE79D9E7491 /* Store.swift in Sources */,
+				AC5C39FE27C05B589EAE2457 /* TuyaCloud.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -218,6 +230,7 @@
 		FA7C752E798F561D7D156D98 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -240,6 +253,7 @@
 		22F75101C717335ACF4089A0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";

@@ -24,6 +24,14 @@ struct SettingsView: View {
             } footer: {
                 Text("קישורים מגדירים איזה כבל מחובר מאיזו יציאה לאיזו כניסה. חדרים מסדרים את מסך הבית.")
             }
+            Section {
+                row(.tuya, "חשבון Tuya / Smart Life", "person.crop.circle.badge.checkmark",
+                    store.tuyaCloud.isEmpty ? "לא מחובר" : "\(store.tuyaCloud.count) מכשירים")
+            } header: {
+                Text("חשבונות")
+            } footer: {
+                Text("מחברים פעם אחת כדי שהמפסקים, השקעים והנורות של Tuya יופיעו עם השמות שנתת להם באפליקציית Smart Life.")
+            }
             Section("מערכת") {
                 row(.log, "יומן פעולות", "list.bullet.rectangle", nil)
             }
@@ -542,6 +550,76 @@ struct RoomEditView: View {
             }
         }
         .navigationTitle(r.name)
+    }
+}
+
+// MARK: - Tuya account
+
+struct TuyaAccountView: View {
+    @EnvironmentObject var store: Store
+    @State private var msg = ""
+    @State private var ok = false
+
+    var body: some View {
+        Form {
+            Section {
+                Picker("אזור", selection: Binding(get: { store.tuyaRegion }, set: { store.tuyaRegion = $0 })) {
+                    ForEach(TuyaCloud.regions.map { $0.id }, id: \.self) { rid in
+                        Text(TuyaCloud.regions.first { $0.id == rid }?.title ?? rid).tag(rid)
+                    }
+                }
+                TextField("Access ID", text: Binding(get: { store.tuyaAccessID }, set: { store.tuyaAccessID = $0 }))
+                    .autocorrectionDisabled().textInputAutocapitalization(.never)
+                SecureField("Access Secret", text: Binding(get: { store.tuyaSecret }, set: { store.tuyaSecret = $0 }))
+                TextField("Device ID של מכשיר אחד (לא חובה)", text: Binding(get: { store.tuyaDeviceHint }, set: { store.tuyaDeviceHint = $0 }))
+                    .autocorrectionDisabled().textInputAutocapitalization(.never)
+            } header: {
+                Text("פרטי הפרויקט")
+            } footer: {
+                Text("ב-iot.tuya.com: Cloud ← Development ← Create Cloud Project (אזור Central Europe). בלשונית Devices ← Link Tuya App Account סורקים את הקוד מאפליקציית Smart Life. את Access ID ו-Access Secret מעתיקים מ-Overview.")
+            }
+            Section {
+                Button {
+                    msg = ""; ok = false
+                    Task {
+                        do { try await store.syncTuya(); ok = true; msg = "התקבלו \(store.tuyaCloud.count) מכשירים" }
+                        catch { msg = error.localizedDescription }
+                    }
+                } label: {
+                    HStack {
+                        Label(store.tuyaCloud.isEmpty ? "התחבר וקבל את השמות" : "רענן מהחשבון", systemImage: "arrow.triangle.2.circlepath")
+                        if store.tuyaSyncing { Spacer(); ProgressView() }
+                    }
+                }
+                .disabled(store.tuyaAccessID.isEmpty || store.tuyaSecret.isEmpty || store.tuyaSyncing)
+                if !msg.isEmpty { Text(msg).font(.footnote).foregroundStyle(ok ? Color.green : Color.red) }
+            }
+            if !store.tuyaCloud.isEmpty {
+                Section {
+                    ForEach(store.tuyaCloud) { c in
+                        let local = (store.devices + store.discovered).first { $0.config["id"] == c.id }
+                        HStack(spacing: 12) {
+                            DeviceIcon(kind: c.kind, size: 26).foregroundStyle(Color.accentColor)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(c.name).font(.body.weight(.semibold))
+                                Text(c.productName.isEmpty ? c.kind.title : c.productName).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if let l = local {
+                                Text(l.ip).font(.caption.monospacedDigit()).foregroundStyle(.green)
+                            } else {
+                                Text("לא נמצא ברשת").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("מכשירים בחשבון (\(store.tuyaCloud.count))")
+                } footer: {
+                    Text("מכשיר ש\"לא נמצא ברשת\": סרוק שוב, או בחר אותו ידנית בהגדרות המכשיר. מכשירי Tuya חדשים מאוד (פרוטוקול 3.4/3.5) עדיין לא נתמכים בשליטה מקומית.")
+                }
+            }
+        }
+        .navigationTitle("חשבון Tuya")
     }
 }
 

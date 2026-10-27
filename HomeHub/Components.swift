@@ -58,7 +58,7 @@ struct DeviceIcon: View {
 // MARK: - Navigation
 
 enum Route: Hashable {
-    case settings, scan, myDevices, connections, rooms, log
+    case settings, scan, myDevices, connections, rooms, log, tuya
     case watch, listen, lights, shades, roomDevices
     case deviceConnections(String) // המחברים של מכשיר
     case device(String)          // שליטה במכשיר
@@ -120,11 +120,8 @@ struct CoverButtons: View {
                 } else if kind == .blind {
                     Image(systemName: c == .open ? "arrow.up" : "arrow.down")
                 } else {
-                    HStack(spacing: 6) {
-                        Image(systemName: c == .open ? "arrow.left" : "arrow.right")
-                        Image(systemName: c == .open ? "arrow.right" : "arrow.left")
-                    }
-                    .environment(\.layoutDirection, .leftToRight)
+                    Image(systemName: c == .open ? "arrow.left.and.line.vertical.and.arrow.right"
+                                                 : "arrow.right.and.line.vertical.and.arrow.left")
                 }
                 Text(c == .open ? "פתח" : (c == .close ? "סגור" : "עצור")).font(.caption2)
             }

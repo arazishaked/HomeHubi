@@ -17,6 +17,9 @@ final class Store: ObservableObject {
     /// אייקונים שנטענו, לפי "ip|appId"
     @Published var appIcons: [String: Data] = [:]
     @Published var loadingApps: Set<String> = []
+    /// מכשירי Tuya מהחשבון (שם, סוג, מזהה ומפתח מקומי)
+    @Published var tuyaCloud: [TuyaCloudDevice] = []
+    @Published var tuyaSyncing = false
     /// מתי נלמדה רשימת האפליקציות של כל מכשיר
     @Published var appsUpdated: [String: Date] = [:]
     private var lastLearnAttempt: [String: Date] = [:]
@@ -43,6 +46,7 @@ final class Store: ObservableObject {
         if let d = ud.data(forKey: "tvApps"), let v = try? dec.decode([String: [AppInfo]].self, from: d) { tvApps = v }
         if let d = ud.data(forKey: "favoriteApps"), let v = try? dec.decode([String: [String]].self, from: d) { favoriteApps = v }
         if let d = ud.data(forKey: "appsUpdated"), let v = try? dec.decode([String: Date].self, from: d) { appsUpdated = v }
+        if let d = ud.data(forKey: "tuyaCloud"), let v = try? dec.decode([TuyaCloudDevice].self, from: d) { tuyaCloud = v }
         if let s = ud.string(forKey: "selectedRoom"), let id = UUID(uuidString: s), rooms.contains(where: { $0.id == id }) {
             selectedRoomID = id
         } else {
@@ -59,6 +63,7 @@ final class Store: ObservableObject {
         if let d = try? enc.encode(tvApps) { ud.set(d, forKey: "tvApps") }
         if let d = try? enc.encode(favoriteApps) { ud.set(d, forKey: "favoriteApps") }
         if let d = try? enc.encode(appsUpdated) { ud.set(d, forKey: "appsUpdated") }
+        if let d = try? enc.encode(tuyaCloud) { ud.set(d, forKey: "tuyaCloud") }
     }
 
     func addLog(_ s: String) {
@@ -136,6 +141,88 @@ final class Store: ObservableObject {
         }
         scanning = false
         addLog("נמצאו \(found.count) מכשירים")
+        if !tuyaCloud.isEmpty { await matchTuya() }
+    }
+
+    // MARK: - Tuya account (שמות המפסקים והמפתחות)
+
+    var tuyaRegion: String {
+        get { UserDefaults.standard.string(forKey: "tuyaRegion") ?? "eu" }
+        set { UserDefaults.standard.set(newValue, forKey: "tuyaRegion"); objectWillChange.send() }
+    }
+    var tuyaAccessID: String {
+        get { UserDefaults.standard.string(forKey: "tuyaAccessID") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "tuyaAccessID"); objectWillChange.send() }
+    }
+    var tuyaSecret: String {
+        get { UserDefaults.standard.string(forKey: "tuyaSecret") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "tuyaSecret"); objectWillChange.send() }
+    }
+    var tuyaDeviceHint: String {
+        get { UserDefaults.standard.string(forKey: "tuyaDeviceHint") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "tuyaDeviceHint"); objectWillChange.send() }
+    }
+
+    /// מוריד מהחשבון את כל המכשירים (שמות ומפתחות) ומשייך אותם למכשירים שנמצאו ברשת
+    func syncTuya() async throws {
+        tuyaSyncing = true
+        defer { tuyaSyncing = false }
+        let list = try await TuyaCloud.fetchDevices(region: tuyaRegion, accessID: tuyaAccessID.trimmingCharacters(in: .whitespaces),
+                                                    secret: tuyaSecret.trimmingCharacters(in: .whitespaces),
+                                                    anyDeviceID: tuyaDeviceHint.trimmingCharacters(in: .whitespaces))
+        tuyaCloud = list
+        saveAll()
+        addLog("Tuya: \(list.count) מכשירים בחשבון")
+        await matchTuya()
+    }
+
+    func tuyaCloudDevice(for d: Device) -> TuyaCloudDevice? {
+        guard let id = d.config["id"] else { return nil }
+        return tuyaCloud.first { $0.id == id }
+    }
+
+    /// מחיל על מכשיר את השם, הסוג והמפתח מהחשבון
+    private func applyTuya(_ c: TuyaCloudDevice, to d: inout Device) {
+        d.name = c.name
+        d.kind = c.kind
+        d.model = c.productName
+        d.config["id"] = c.id
+        d.config["key"] = c.localKey
+        d.config["dps"] = c.powerDP
+    }
+
+    func assignTuya(ip: String, cloudID: String) {
+        guard let c = tuyaCloud.first(where: { $0.id == cloudID }) else { return }
+        if let i = devices.firstIndex(where: { $0.ip == ip }) { applyTuya(c, to: &devices[i]) }
+        if let i = discovered.firstIndex(where: { $0.ip == ip }) { applyTuya(c, to: &discovered[i]) }
+        saveAll()
+    }
+
+    /// מוצא איזה מכשיר בחשבון יושב באיזו כתובת: רק המפתח הנכון מצליח לדבר עם המכשיר
+    func matchTuya() async {
+        let used = Set(devices.compactMap { $0.config["id"] })
+        var pending = (devices + discovered.filter { !isAdded($0.ip) }).filter { $0.brand == .tuya }
+        // מכשירים שכבר משויכים: רק מעדכנים שם/סוג אם השתנו בחשבון
+        for d in pending {
+            if let c = tuyaCloudDevice(for: d), d.name != c.name { assignTuya(ip: d.ip, cloudID: c.id) }
+        }
+        pending.removeAll { $0.config["id"] != nil && !($0.config["key"] ?? "").isEmpty }
+        var free = tuyaCloud.filter { !used.contains($0.id) && !$0.localKey.isEmpty }
+        for d in pending {
+            for c in free {
+                var test = d
+                test.config["id"] = c.id
+                test.config["key"] = c.localKey
+                test.config["dps"] = c.powerDP
+                let st = await TuyaController(test, save: { _, _ in }).status()
+                if st.reachable {
+                    assignTuya(ip: d.ip, cloudID: c.id)
+                    addLog("Tuya: \(d.ip) ← \(c.name)")
+                    free.removeAll { $0.id == c.id }
+                    break
+                }
+            }
+        }
     }
 
     // MARK: - Rooms
@@ -290,7 +377,8 @@ final class Store: ObservableObject {
         let id = await controller(for: d).identify()
         guard let i = devices.firstIndex(where: { $0.ip == d.ip }) else { return }
         var n = devices[i]
-        let generic = n.name == n.ip || n.name.hasPrefix("Tuya ") || n.name.hasPrefix("מצלמה ")
+        let generic = n.name == n.ip || n.name.hasPrefix("Tuya ") || n.name.hasPrefix("מצלמה ") || n.name.hasPrefix("מכשיר ")
+            || n.name.hasPrefix("Shelly ") || n.name.hasPrefix("Sonoff ") || n.name.hasSuffix(" \(n.ip)")
             || ["Google Cast", "LG webOS TV", "Denon/Marantz", "Roku", "Samsung TV"].contains(n.name)
         if generic, let name = id.name, !name.isEmpty { n.name = name }
         if let m = id.model, !m.isEmpty { n.model = m }
@@ -593,7 +681,7 @@ final class Store: ObservableObject {
     func stopPolling() { pollTask?.cancel() }
 
     func pollOnce() async {
-        let list = devices.filter { $0.kind != .camera && $0.brand != .unknown }
+        let list = devices.filter { $0.kind != .camera && $0.kind != .phone && $0.kind != .computer }
         var jobs: [(String, Controller)] = []
         for d in list { jobs.append((d.ip, controller(for: d))) }
         var results: [(String, Status)] = []

@@ -1,7 +1,7 @@
 import Foundation
 
 enum Brand: String, Codable, CaseIterable {
-    case samsung, lg, roku, sony, denon, yamaha, tuya, cast, camera, unknown
+    case samsung, lg, roku, sony, denon, yamaha, onkyo, tuya, shelly, sonoff, hue, sonos, apple, philips, cast, camera, unknown
     var title: String {
         switch self {
         case .samsung: return "Samsung"
@@ -10,7 +10,14 @@ enum Brand: String, Codable, CaseIterable {
         case .sony: return "Sony Bravia"
         case .denon: return "Denon/Marantz"
         case .yamaha: return "Yamaha"
+        case .onkyo: return "Onkyo / Pioneer"
         case .tuya: return "Tuya"
+        case .shelly: return "Shelly"
+        case .sonoff: return "Sonoff"
+        case .hue: return "Philips Hue"
+        case .sonos: return "Sonos"
+        case .apple: return "Apple"
+        case .philips: return "Philips TV"
         case .cast: return "Android TV / Cast"
         case .camera: return "מצלמה"
         case .unknown: return "לא מזוהה"
@@ -19,7 +26,7 @@ enum Brand: String, Codable, CaseIterable {
 }
 
 enum Kind: String, Codable, CaseIterable {
-    case tv, receiver, streamer, light, curtain, blind, plug, camera, other
+    case tv, receiver, streamer, speaker, light, curtain, blind, plug, camera, hub, computer, phone, printer, other
     var title: String {
         switch self {
         case .tv: return "טלוויזיה"
@@ -30,6 +37,11 @@ enum Kind: String, Codable, CaseIterable {
         case .blind: return "תריס"
         case .plug: return "שקע / מפסק"
         case .camera: return "מצלמה"
+        case .speaker: return "רמקול"
+        case .hub: return "רכזת / גשר"
+        case .computer: return "מחשב"
+        case .phone: return "טלפון / טאבלט"
+        case .printer: return "מדפסת"
         case .other: return "אחר"
         }
     }
@@ -42,7 +54,12 @@ enum Kind: String, Codable, CaseIterable {
         case .curtain, .blind: return "rectangle.split.3x1"
         case .plug: return "powerplug"
         case .camera: return "video"
-        case .other: return "questionmark.circle"
+        case .speaker: return "hifispeaker.2"
+        case .hub: return "point.3.connected.trianglepath.dotted"
+        case .computer: return "desktopcomputer"
+        case .phone: return "iphone"
+        case .printer: return "printer"
+        case .other: return "wifi"
         }
     }
 }

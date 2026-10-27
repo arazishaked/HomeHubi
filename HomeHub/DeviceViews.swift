@@ -258,6 +258,13 @@ struct DeviceSettingsView: View {
                 if d.brand == .sony {
                     TextField("Pre-Shared Key", text: cfg("psk")).autocorrectionDisabled().textInputAutocapitalization(.never)
                 }
+                if d.brand == .tuya && !store.tuyaCloud.isEmpty {
+                    Picker("מכשיר בחשבון Tuya", selection: Binding<String>(get: { store.device(ip)?.config["id"] ?? "" },
+                                                                        set: { store.assignTuya(ip: ip, cloudID: $0) })) {
+                        Text("לא נבחר").tag("")
+                        ForEach(store.tuyaCloud) { Text($0.name).tag($0.id) }
+                    }
+                }
                 if d.brand == .tuya {
                     TextField("Device ID", text: cfg("id")).autocorrectionDisabled().textInputAutocapitalization(.never)
                     TextField("Local Key (16 תווים)", text: cfg("key")).autocorrectionDisabled().textInputAutocapitalization(.never)

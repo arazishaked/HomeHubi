@@ -38,6 +38,7 @@ struct HomeView: View {
         case .connections: ConnectionsSettingsView()
         case .rooms: RoomsView()
         case .log: LogView()
+        case .tuya: TuyaAccountView()
         case .watch: WatchView()
         case .listen: ListenView()
         case .lights: LightsView()

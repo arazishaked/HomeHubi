@@ -13,7 +13,13 @@ class Controller {
         self.save = save
     }
 
-    func status() async -> Status { Status() }
+    /// מכשיר בלי ממשק שליטה: רק בודקים שהוא זמין ברשת
+    func status() async -> Status {
+        for p in dev.ports.prefix(2) {
+            if await isOpen(dev.ip, UInt16(p), 1.0) { return Status(power: nil, reachable: true) }
+        }
+        return Status(power: nil, reachable: false)
+    }
     func power(_ on: Bool) async throws { throw HHError.msg("לא נתמך במכשיר הזה") }
     func apps() async throws -> [AppInfo] { throw HHError.msg("לא נתמך במכשיר הזה") }
     func launch(_ app: AppInfo) async throws { throw HHError.msg("לא נתמך במכשיר הזה") }
@@ -79,6 +85,8 @@ func makeController(_ d: Device, save: @escaping (String, String) -> Void) -> Co
     case .yamaha: return YamahaController(d, save: save)
     case .tuya: return TuyaController(d, save: save)
     case .cast: return CastController(d, save: save)
+    case .shelly: return ShellyController(d, save: save)
+    case .sonoff: return SonoffController(d, save: save)
     case .camera:
         return CameraController(d, save: save)
     default: return Controller(d, save: save)
@@ -651,6 +659,94 @@ final class CastController: Controller {
                               manufacturer: maker, os: build.map { isTV ? "Google TV / Android TV · Cast \($0)" : "Cast \($0)" },
                               isTV: isTV)
     }
+}
+
+// MARK: - Shelly (מפסקים, דימרים ותריסים, Gen1 ו-Gen2+)
+
+final class ShellyController: Controller {
+    private var gen2: Bool { (Int(dev.config["gen"] ?? "1") ?? 1) >= 2 }
+    private var base: String { "http://\(dev.ip)" }
+    private var isLight: Bool { dev.kind == .light }
+    private var isCover: Bool { dev.kind == .curtain || dev.kind == .blind }
+
+    private func get(_ path: String) async throws -> [String: Any] {
+        let r = try await httpRequest(base + path, timeout: 3)
+        guard (200..<300).contains(r.1) else { throw HHError.msg("Shelly החזיר שגיאה \(r.1)") }
+        return jsonObj(r.0) ?? [:]
+    }
+
+    override func status() async -> Status {
+        if gen2 {
+            let comp = isCover ? "Cover" : (isLight ? "Light" : "Switch")
+            guard let o = try? await get("/rpc/\(comp).GetStatus?id=0") else { return Status(power: nil, reachable: false) }
+            var st = Status(power: o["output"] as? Bool, reachable: true)
+            if let b = o["brightness"] as? Int { st.level = b }
+            if let pos = o["current_pos"] as? Int { st.level = pos }
+            return st
+        }
+        guard let o = try? await get("/status") else { return Status(power: nil, reachable: false) }
+        var st = Status(power: nil, reachable: true)
+        if let relay = (o["relays"] as? [[String: Any]])?.first { st.power = relay["ison"] as? Bool }
+        if let light = (o["lights"] as? [[String: Any]])?.first {
+            st.power = light["ison"] as? Bool
+            st.level = light["brightness"] as? Int
+        }
+        if let roller = (o["rollers"] as? [[String: Any]])?.first { st.level = roller["current_pos"] as? Int }
+        return st
+    }
+
+    override func power(_ on: Bool) async throws {
+        if isCover { try await cover(on ? .open : .close); return }
+        if gen2 {
+            _ = try await get("/rpc/\(isLight ? "Light" : "Switch").Set?id=0&on=\(on)")
+        } else {
+            _ = try await get("/\(isLight ? "light" : "relay")/0?turn=\(on ? "on" : "off")")
+        }
+    }
+
+    override func setLevel(_ pct: Int) async throws {
+        let p = max(0, min(100, pct))
+        if isCover {
+            _ = try await get(gen2 ? "/rpc/Cover.GoToPosition?id=0&pos=\(p)" : "/roller/0?go=to_pos&roller_pos=\(p)")
+        } else {
+            _ = try await get(gen2 ? "/rpc/Light.Set?id=0&on=true&brightness=\(max(1, p))" : "/light/0?turn=on&brightness=\(max(1, p))")
+        }
+    }
+
+    override func cover(_ c: CoverCommand) async throws {
+        let g1 = c == .open ? "open" : (c == .close ? "close" : "stop")
+        let g2 = c == .open ? "Open" : (c == .close ? "Close" : "Stop")
+        _ = try await get(gen2 ? "/rpc/Cover.\(g2)?id=0" : "/roller/0?go=\(g1)")
+    }
+
+    override func identify() async -> DeviceIdentity {
+        guard let o = try? await get("/shelly") else { return DeviceIdentity() }
+        var id = DeviceIdentity(model: (o["model"] as? String) ?? (o["type"] as? String), manufacturer: "Shelly",
+                                os: (o["fw"] as? String) ?? (o["ver"] as? String), mac: o["mac"] as? String, isTV: false)
+        if let n = o["name"] as? String, !n.isEmpty { id.name = n }
+        else if !gen2, let s = try? await get("/settings"), let n = s["name"] as? String, !n.isEmpty { id.name = n }
+        return id
+    }
+}
+
+// MARK: - Sonoff (מצב LAN / DIY)
+
+final class SonoffController: Controller {
+    private func post(_ path: String, _ data: [String: Any]) async throws -> [String: Any] {
+        let body = Data(jsonString(["deviceid": dev.config["id"] ?? "", "data": data]).utf8)
+        let r = try await httpRequest("http://\(dev.ip):8081/zeroconf/\(path)", method: "POST",
+                                      headers: ["Content-Type": "application/json"], body: body, timeout: 3)
+        return jsonObj(r.0) ?? [:]
+    }
+
+    override func status() async -> Status {
+        guard let o = try? await post("info", [:]) else { return Status(power: nil, reachable: false) }
+        var data = o["data"] as? [String: Any] ?? [:]
+        if let str = o["data"] as? String, let parsed = jsonObj(Data(str.utf8)) { data = parsed }
+        return Status(power: (data["switch"] as? String).map { $0 == "on" }, reachable: true)
+    }
+
+    override func power(_ on: Bool) async throws { _ = try await post("switch", ["switch": on ? "on" : "off"]) }
 }
 
 // MARK: - Camera

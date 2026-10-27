@@ -265,3 +265,88 @@ func sendWOL(mac: String) {
     }
     Darwin.close(fd)
 }
+
+// MARK: - Host probing
+
+enum ProbeResult { case open, refused, none }
+
+/// בדיקת פורט: פתוח / נדחה (המכשיר קיים אבל הפורט סגור) / אין תגובה
+func probe(_ ip: String, _ port: UInt16, _ timeout: Double) async -> ProbeResult {
+    guard let p = NWEndpoint.Port(rawValue: port) else { return .none }
+    let conn = NWConnection(host: NWEndpoint.Host(ip), port: p, using: .tcp)
+    return await withCheckedContinuation { (cont: CheckedContinuation<ProbeResult, Never>) in
+        let lock = NSLock()
+        var done = false
+        func finish(_ r: ProbeResult) {
+            lock.lock()
+            if done { lock.unlock(); return }
+            done = true
+            lock.unlock()
+            conn.cancel()
+            cont.resume(returning: r)
+        }
+        conn.stateUpdateHandler = { s in
+            switch s {
+            case .ready:
+                finish(.open)
+            case .waiting(let e), .failed(let e):
+                if case .posix(let code) = e, code == .ECONNREFUSED || code == .ECONNRESET {
+                    finish(.refused)
+                } else {
+                    finish(.none)
+                }
+            default:
+                break
+            }
+        }
+        conn.start(queue: .global())
+        DispatchQueue.global().asyncAfter(deadline: .now() + timeout) { finish(.none) }
+    }
+}
+
+/// שם המכשיר כפי שהראוטר מכיר אותו (DNS הפוך), למשל "Galaxy-S23" או "Living-Room-TV"
+func reverseName(_ ip: String, timeout: Double = 1.5) async -> String? {
+    await withCheckedContinuation { (cont: CheckedContinuation<String?, Never>) in
+        let lock = NSLock()
+        var done = false
+        func finish(_ v: String?) {
+            lock.lock()
+            if done { lock.unlock(); return }
+            done = true
+            lock.unlock()
+            cont.resume(returning: v)
+        }
+        DispatchQueue.global().async {
+            var sin = sockaddr_in()
+            let len = socklen_t(MemoryLayout<sockaddr_in>.size)
+            sin.sin_len = UInt8(len)
+            sin.sin_family = sa_family_t(AF_INET)
+            guard inet_pton(AF_INET, ip, &sin.sin_addr) == 1 else { finish(nil); return }
+            var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            let r = withUnsafePointer(to: &sin) { ptr in
+                ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                    getnameinfo($0, len, &host, socklen_t(host.count), nil, 0, NI_NAMEREQD)
+                }
+            }
+            guard r == 0 else { finish(nil); return }
+            var name = String(cString: host)
+            for suffix in [".local", ".lan", ".home", ".localdomain", ".domain"] where name.lowercased().hasSuffix(suffix) {
+                name = String(name.dropLast(suffix.count))
+            }
+            finish(name == ip || name.isEmpty ? nil : name)
+        }
+        DispatchQueue.global().asyncAfter(deadline: .now() + timeout) { finish(nil) }
+    }
+}
+
+func ipv4String(_ data: Data) -> String? {
+    data.withUnsafeBytes { raw -> String? in
+        guard let base = raw.baseAddress, raw.count >= MemoryLayout<sockaddr_in>.size else { return nil }
+        let sa = base.assumingMemoryBound(to: sockaddr.self).pointee
+        guard sa.sa_family == sa_family_t(AF_INET) else { return nil }
+        var addr = base.assumingMemoryBound(to: sockaddr_in.self).pointee.sin_addr
+        var buf = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
+        guard inet_ntop(AF_INET, &addr, &buf, socklen_t(INET_ADDRSTRLEN)) != nil else { return nil }
+        return String(cString: buf)
+    }
+}

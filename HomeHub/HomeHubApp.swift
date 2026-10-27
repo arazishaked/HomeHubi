@@ -20,6 +20,5 @@ struct HomeHubApp: App {
 struct RootView: View {
     var body: some View {
         HomeView()
-            .environment(\.layoutDirection, .rightToLeft)
     }
 }

@@ -7,7 +7,8 @@ def uid(name):
     return hashlib.md5(name.encode()).hexdigest()[:24].upper()
 
 P = {k: uid(k) for k in ["project", "main", "group", "products", "app", "target", "sources", "frameworks",
-                         "resources", "plist", "pcl", "tcl", "pdebug", "prelease", "tdebug", "trelease"]}
+                         "resources", "plist", "pcl", "tcl", "pdebug", "prelease", "tdebug", "trelease", "assets", "assetsbf"]}
+has_assets = os.path.isdir(os.path.join(src, "Assets.xcassets"))
 fref = {f: uid("fref:" + f) for f in swift}
 bfile = {f: uid("bfile:" + f) for f in swift}
 
@@ -24,11 +25,15 @@ w("")
 w("/* Begin PBXBuildFile section */")
 for f in swift:
     w(f"\t\t{bfile[f]} /* {f} in Sources */ = {{isa = PBXBuildFile; fileRef = {fref[f]} /* {f} */; }};")
+if has_assets:
+    w(f"\t\t{P['assetsbf']} /* Assets.xcassets in Resources */ = {{isa = PBXBuildFile; fileRef = {P['assets']} /* Assets.xcassets */; }};")
 w("/* End PBXBuildFile section */")
 w("")
 w("/* Begin PBXFileReference section */")
 w(f"\t\t{P['app']} /* HomeHub.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HomeHub.app; sourceTree = BUILT_PRODUCTS_DIR; }};")
 w(f"\t\t{P['plist']} /* Info.plist */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = \"<group>\"; }};")
+if has_assets:
+    w(f"\t\t{P['assets']} /* Assets.xcassets */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = \"<group>\"; }};")
 for f in swift:
     w(f"\t\t{fref[f]} /* {f} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = {f}; sourceTree = \"<group>\"; }};")
 w("/* End PBXFileReference section */")
@@ -57,6 +62,8 @@ w("\t\t\tisa = PBXGroup;")
 w("\t\t\tchildren = (")
 for f in swift:
     w(f"\t\t\t\t{fref[f]} /* {f} */,")
+if has_assets:
+    w(f"\t\t\t\t{P['assets']} /* Assets.xcassets */,")
 w(f"\t\t\t\t{P['plist']} /* Info.plist */,")
 w("\t\t\t);")
 w("\t\t\tpath = HomeHub;")
@@ -129,6 +136,8 @@ w(f"\t\t{P['resources']} /* Resources */ = {{")
 w("\t\t\tisa = PBXResourcesBuildPhase;")
 w("\t\t\tbuildActionMask = 2147483647;")
 w("\t\t\tfiles = (")
+if has_assets:
+    w(f"\t\t\t\t{P['assetsbf']} /* Assets.xcassets in Resources */,")
 w("\t\t\t);")
 w("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
 w("\t\t};")
@@ -157,7 +166,7 @@ debug = ['DEBUG_INFORMATION_FORMAT = dwarf;', 'ENABLE_TESTABILITY = YES;', 'GCC_
 release = ['DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";', 'ENABLE_NS_ASSERTIONS = NO;', 'SWIFT_COMPILATION_MODE = wholemodule;',
            'SWIFT_OPTIMIZATION_LEVEL = "-O";', 'VALIDATE_PRODUCT = YES;']
 target = [
- 'CODE_SIGN_STYLE = Automatic;', 'CURRENT_PROJECT_VERSION = 1;', 'DEVELOPMENT_TEAM = "";', 'ENABLE_PREVIEWS = YES;',
+ 'ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;', 'CODE_SIGN_STYLE = Automatic;', 'CURRENT_PROJECT_VERSION = 1;', 'DEVELOPMENT_TEAM = "";', 'ENABLE_PREVIEWS = YES;',
  'GENERATE_INFOPLIST_FILE = NO;', 'INFOPLIST_FILE = HomeHub/Info.plist;',
  'LD_RUNPATH_SEARCH_PATHS = (\n\t\t\t\t\t"$(inherited)",\n\t\t\t\t\t"@executable_path/Frameworks",\n\t\t\t\t);',
  'MARKETING_VERSION = 1.0;', 'PRODUCT_BUNDLE_IDENTIFIER = com.homehub.app;', 'PRODUCT_NAME = "$(TARGET_NAME)";',

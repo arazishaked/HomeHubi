@@ -8,10 +8,16 @@
 	<string>HomeHub</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>he</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
@@ -22,8 +28,6 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>האפליקציה סורקת את הרשת הביתית כדי לזהות ולשלוט במכשירים החכמים</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -31,6 +35,45 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_airplay._tcp</string>
+		<string>_amzn-wplay._tcp</string>
+		<string>_androidtvremote2._tcp</string>
+		<string>_companion-link._tcp</string>
+		<string>_daap._tcp</string>
+		<string>_device-info._tcp</string>
+		<string>_elg._tcp</string>
+		<string>_esphomelib._tcp</string>
+		<string>_ewelink._tcp</string>
+		<string>_googlecast._tcp</string>
+		<string>_hap._tcp</string>
+		<string>_heos-audio._tcp</string>
+		<string>_homekit._tcp</string>
+		<string>_http._tcp</string>
+		<string>_hue._tcp</string>
+		<string>_ipp._tcp</string>
+		<string>_lgsmarttv._tcp</string>
+		<string>_matter._tcp</string>
+		<string>_mediaremotetv._tcp</string>
+		<string>_miio._udp</string>
+		<string>_pdl-datastream._tcp</string>
+		<string>_printer._tcp</string>
+		<string>_raop._tcp</string>
+		<string>_rfb._tcp</string>
+		<string>_rtsp._tcp</string>
+		<string>_shelly._tcp</string>
+		<string>_smb._tcp</string>
+		<string>_sonos._tcp</string>
+		<string>_spotify-connect._tcp</string>
+		<string>_ssh._tcp</string>
+		<string>_touch-able._tcp</string>
+		<string>_viziocast._tcp</string>
+		<string>_wled._tcp</string>
+		<string>_workstation._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>האפליקציה סורקת את הרשת הביתית כדי לזהות ולשלוט במכשירים החכמים</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
